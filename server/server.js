@@ -5,7 +5,11 @@ const connectDB = require('./config/db');
 
 const app = express();
 
-app.use(cors());
+// CORS middleware - MORA biti pre routes
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+  }));
 app.use(express.json());
 
 connectDB();
