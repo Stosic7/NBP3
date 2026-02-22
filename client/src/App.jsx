@@ -1,26 +1,40 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Plus, Search, Filter, BarChart3, User, Settings, Sun, Moon } from 'lucide-react';
+import { Home, Plus, Search, Filter, BarChart3, User, Settings, Sun, Moon, Award, DollarSign, Clock } from 'lucide-react';
+import Auth from './components/Auth';
+import ProfitMatrix from './components/ProfitMatrix';
+import InventoryAging from './components/InventoryAging';
 import InventoryList from './components/InventoryList';
 import AddDevice from './components/AddDevice';
 import Dashboard from './components/Dashboard';
 import StatsCards from './components/StatsCards';
 import Profile from './components/Profile';
 import AdvancedStats from './components/AdvancedStats';
+import Leaderboard from './components/Leaderboard';
 
 function App() {
+  const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
-    fetchDevices();
+    const loggedInUser = localStorage.getItem('userInfo');
+    if (loggedInUser) {
+      setUser(JSON.parse(loggedInUser));
+    }
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchDevices();
+    }
+  }, [user]);
 
   const fetchDevices = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/devices');
+      const res = await fetch('http://localhost:5001/api/devices');
       const data = await res.json();
       setDevices(data);
     } catch (err) {
@@ -30,11 +44,23 @@ function App() {
     }
   };
 
+  const handleLogin = (userData) => {
+    setUser(userData);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('userInfo');
+    setUser(null);
+  };
+
   const tabs = [
     { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
     { id: 'stats', icon: Search, label: 'Analytics' },
     { id: 'inventory', icon: Home, label: 'Inventory' },
     { id: 'add', icon: Plus, label: 'Add Device' },
+    { id: 'leaderboard', icon: Award, label: 'Leaderboard' },
+    { id: 'profit', icon: DollarSign, label: 'Profit Matrix' },
+    { id: 'aging', icon: Clock, label: 'Stock Aging' },
     { id: 'profile', icon: User, label: 'Profile' },
     { id: 'settings', icon: Settings, label: 'Settings' }
   ];
@@ -55,8 +81,14 @@ function App() {
         return <InventoryList devices={devices} fetchDevices={fetchDevices} darkMode={darkMode} />;
       case 'add':
         return <AddDevice fetchDevices={fetchDevices} darkMode={darkMode} />;
+      case 'leaderboard':
+        return <Leaderboard darkMode={darkMode} />;
+      case 'profit':
+        return <ProfitMatrix darkMode={darkMode} />;
+      case 'aging':
+        return <InventoryAging darkMode={darkMode} />;
       case 'profile':
-        return <Profile darkMode={darkMode} />;
+        return <Profile darkMode={darkMode} user={user} onLogout={handleLogout} />;
       case 'settings':
         return (
           <motion.div className="glass-card p-16 rounded-3xl max-w-2xl mx-auto text-center">
@@ -93,6 +125,10 @@ function App() {
         return null;
     }
   };
+
+  if (!user) {
+    return <Auth onLogin={handleLogin} />;
+  }
 
   return (
     <div className={`min-h-screen ${darkMode ? 'dark bg-gradient-to-br from-slate-900 via-purple-900/40 to-slate-900' : 'bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-100/50'} transition-all duration-1000 relative overflow-hidden`}>
@@ -147,7 +183,7 @@ function App() {
                   whileHover={{ scale: activeTab === tab.id ? 1.03 : 1.08 }}
                   whileTap={{ scale: 0.97 }}
                 >
-                  <tab.icon className={`w-7 h-7 ${activeTab === tab.id ? 'group-hover:scale-125' : 'group-hover:scale-125'} transition-transform duration-300`} />
+                  <tab.icon className={`w-7 h-7 transition-transform duration-300 ${activeTab === tab.id ? 'scale-125' : 'group-hover:scale-125'}`} />
                   <span className="font-black tracking-wide text-lg">{tab.label}</span>
                   {activeTab === tab.id && (
                     <motion.div

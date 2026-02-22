@@ -5,27 +5,24 @@ const connectDB = require('./config/db');
 
 const app = express();
 
-// Middleware
-app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173']
-}));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// MongoDB connection
+app.use(cors());
+
 connectDB();
 
-// Routes
 app.get('/api/test', (req, res) => {
-  res.json({ 
-    message: 'TechStock Backend API working!',
-    mongodb: process.env.MONGODB_URI ? 'Connected' : 'Check .env',
-    timestamp: new Date().toISOString()
-  });
+  res.json({ message: 'API is alive on 5001' });
 });
 
 app.use('/api/devices', require('./routes/devices'));
+app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/advanced-analytics', require('./routes/advancedAnalytics'));
+app.use('/api/auth', require('./routes/auth'));
 
-const PORT = process.env.PORT || 5000;
+// FORSIRAMO PORT 5001
+const PORT = 5001;
 app.listen(PORT, () => {
   console.log(`TechStock Server running on port ${PORT}`);
 });

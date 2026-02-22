@@ -18,7 +18,7 @@ const InventoryList = ({ devices, fetchDevices }) => {
 
   const deleteDevice = async (id) => {
     if (confirm('Delete this device?')) {
-      await fetch(`http://localhost:5000/api/devices/${id}`, { method: 'DELETE' });
+      await fetch(`http://localhost:5001/api/devices/${id}`, { method: 'DELETE' });
       fetchDevices();
     }
   };

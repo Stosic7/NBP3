@@ -1,8 +1,8 @@
 const express = require('express');
 const Device = require('../models/Device');
+const User = require('../models/User');
 const router = express.Router();
 
-// GET all devices
 router.get('/', async (req, res) => {
   try {
     const devices = await Device.find().sort({ receiveDate: -1 }).lean();
@@ -12,18 +12,23 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST new device
 router.post('/', async (req, res) => {
   try {
     const device = new Device(req.body);
     const newDevice = await device.save();
+    
+    if (req.body.userId) {
+      await User.findByIdAndUpdate(req.body.userId, {
+        $inc: { points: 50, devicesCount: 1 }
+      });
+    }
+    
     res.status(201).json(newDevice);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
 
-// DELETE device
 router.delete('/:id', async (req, res) => {
   try {
     const device = await Device.findById(req.params.id);
@@ -35,7 +40,6 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// PUT update device
 router.put('/:id', async (req, res) => {
   try {
     const device = await Device.findByIdAndUpdate(req.params.id, req.body, { new: true });
