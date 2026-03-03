@@ -29,16 +29,48 @@ router.post('/', protect, async (req, res) => {
   }
 });
 
+router.post('/:id/buy', protect, async (req, res) => {
+  try {
+    const device = await Device.findById(req.params.id);
+    if (!device) return res.status(404).json({ message: 'Device not found' });
+    if (device.status === 'sold') return res.status(400).json({ message: 'Uređaj je već prodat' });
+
+    await Device.findByIdAndUpdate(req.params.id, {
+      status: 'sold',
+      sellDate: new Date(),
+      customer: {
+        name: req.user.name,
+        email: req.user.email
+      }
+    });
+
+    if (device.user) {
+      if (device.user.toString() !== req.user._id.toString()) {
+        await User.findByIdAndUpdate(device.user, { $inc: { points: 100 } });
+        await User.findByIdAndUpdate(req.user._id, { $inc: { points: 50 } });
+      } else {
+        await User.findByIdAndUpdate(req.user._id, { $inc: { points: 50 } });
+      }
+    } else {
+      await User.findByIdAndUpdate(req.user._id, { $inc: { points: 50 } });
+    }
+
+    res.json({ message: 'Uređaj uspešno kupljen' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 router.delete('/:id', protect, async (req, res) => {
   try {
     const device = await Device.findById(req.params.id);
     if (!device) return res.status(404).json({ message: 'Device not found' });
     
-    if (device.user.toString() !== req.user._id.toString()) {
+    if (device.user && device.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Nemate pravo da obrišete ovaj uređaj' });
     }
 
-    await device.deleteOne();
+    await Device.findByIdAndDelete(req.params.id);
     res.json({ message: 'Device deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -50,7 +82,7 @@ router.put('/:id', protect, async (req, res) => {
     let device = await Device.findById(req.params.id);
     if (!device) return res.status(404).json({ message: 'Device not found' });
 
-    if (device.user.toString() !== req.user._id.toString()) {
+    if (device.user && device.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Nemate pravo da menjate ovaj uređaj' });
     }
 

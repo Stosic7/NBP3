@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Trash2, Edit3, X } from 'lucide-react';
+import { Search, Trash2, Edit3, X, Info, ShoppingCart, Tag, Monitor } from 'lucide-react';
 
 const InventoryList = ({ devices, fetchDevices, darkMode, user }) => {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterType, setFilterType] = useState('all');
   const [deleteId, setDeleteId] = useState(null);
+  const [selectedDevice, setSelectedDevice] = useState(null);
 
   const filteredDevices = devices.filter(device => 
     device.model.toLowerCase().includes(search.toLowerCase()) &&
@@ -29,7 +30,20 @@ const InventoryList = ({ devices, fetchDevices, darkMode, user }) => {
       fetchDevices();
       setDeleteId(null);
     } catch (error) {
-      console.error(error);
+    }
+  };
+
+  const buyDevice = async (id) => {
+    try {
+      await fetch(`http://localhost:5001/api/devices/${id}/buy`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
+      });
+      fetchDevices();
+      setSelectedDevice(null);
+    } catch (error) {
     }
   };
 
@@ -73,7 +87,7 @@ const InventoryList = ({ devices, fetchDevices, darkMode, user }) => {
               <th className={`px-6 py-5 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Type</th>
               <th className={`px-6 py-5 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Model</th>
               <th className={`px-6 py-5 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Status</th>
-              <th className={`px-6 py-5 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Profit</th>
+              <th className={`px-6 py-5 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Price</th>
               <th className={`px-6 py-5 text-left text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>Actions</th>
             </tr>
           </thead>
@@ -92,17 +106,20 @@ const InventoryList = ({ devices, fetchDevices, darkMode, user }) => {
                   <td className={`px-6 py-5 whitespace-nowrap text-sm font-medium ${darkMode ? 'text-slate-200' : 'text-gray-900'}`}>{device.model}</td>
                   <td>
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      device.status === 'sold' ? 'bg-green-100 text-green-800' :
-                      device.status === 'available' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'
+                      device.status === 'sold' ? 'bg-red-100 text-red-800' :
+                      device.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                     }`}>
                       {device.status}
                     </span>
                   </td>
                   <td className="px-6 py-5 whitespace-nowrap text-sm text-green-500 font-semibold">
-                    ${(device.sellPrice - device.buyPrice).toFixed(0)}
+                    ${device.sellPrice}
                   </td>
                   <td className="px-6 py-5 whitespace-nowrap text-sm font-medium space-x-2">
-                    {device.user === user._id && (
+                    <button onClick={() => setSelectedDevice(device)} className={`p-2 rounded-xl transition-all ${darkMode ? 'text-blue-400 hover:bg-blue-500/20' : 'text-blue-600 hover:bg-blue-100 hover:text-blue-900'}`}>
+                      <Info className="w-4 h-4" />
+                    </button>
+                    {device.user === user?._id && (
                       <>
                         <button className={`p-2 rounded-xl transition-all ${darkMode ? 'text-indigo-400 hover:bg-indigo-500/20' : 'text-indigo-600 hover:bg-indigo-100 hover:text-indigo-900'}`}>
                           <Edit3 className="w-4 h-4" />
@@ -128,6 +145,92 @@ const InventoryList = ({ devices, fetchDevices, darkMode, user }) => {
           No devices found
         </motion.p>
       )}
+
+      <AnimatePresence>
+        {selectedDevice && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className={`max-w-2xl w-full p-8 rounded-[2.5rem] shadow-2xl relative ${darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}
+            >
+              <button 
+                onClick={() => setSelectedDevice(null)}
+                className={`absolute top-6 right-6 p-2 rounded-full transition-colors ${darkMode ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-gray-100 text-gray-500'}`}
+              >
+                <X className="w-6 h-6" />
+              </button>
+              
+              <div className="flex items-center gap-4 mb-6">
+                <div className={`p-4 rounded-2xl ${darkMode ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
+                  <Monitor className="w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className={`text-3xl font-black ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {selectedDevice.manufacturer} {selectedDevice.model}
+                  </h3>
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 mt-2 rounded-full text-sm font-bold ${
+                    selectedDevice.status === 'sold' ? 'bg-red-500/10 text-red-500' :
+                    selectedDevice.status === 'available' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'
+                  }`}>
+                    <Tag className="w-4 h-4" /> {selectedDevice.status.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+
+              <div className={`grid grid-cols-2 gap-4 mb-8 p-6 rounded-3xl ${darkMode ? 'bg-slate-900/50' : 'bg-gray-50'}`}>
+                <div>
+                  <span className={`text-xs font-bold uppercase ${darkMode ? 'text-slate-500' : 'text-gray-400'}`}>Tip Uređaja</span>
+                  <p className={`font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>{selectedDevice.type}</p>
+                </div>
+                <div>
+                  <span className={`text-xs font-bold uppercase ${darkMode ? 'text-slate-500' : 'text-gray-400'}`}>Stanje</span>
+                  <p className={`font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>{selectedDevice.condition}</p>
+                </div>
+                <div className="col-span-2">
+                  <span className={`text-xs font-bold uppercase ${darkMode ? 'text-slate-500' : 'text-gray-400'}`}>Specifikacije</span>
+                  <p className={`font-semibold ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>
+                    {typeof selectedDevice.specs === 'object' && selectedDevice.specs !== null
+                      ? Object.entries(selectedDevice.specs).map(([k, v]) => `${k}: ${v}`).join(', ')
+                      : selectedDevice.specs || 'Nema dodatih specifikacija.'}
+                  </p>
+                </div>
+                <div>
+                  <span className={`text-xs font-bold uppercase ${darkMode ? 'text-slate-500' : 'text-gray-400'}`}>Cena</span>
+                  <p className="text-3xl font-black text-green-500">${selectedDevice.sellPrice}</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                {selectedDevice.status === 'available' && selectedDevice.user !== user?._id && (
+                  <button 
+                    onClick={() => buyDevice(selectedDevice._id)}
+                    className="flex-1 flex items-center justify-center gap-2 py-4 font-black rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-green-500/30"
+                  >
+                    <ShoppingCart className="w-5 h-5" /> Kupi Uređaj
+                  </button>
+                )}
+                {selectedDevice.status === 'available' && selectedDevice.user === user?._id && (
+                  <div className={`flex-1 text-center py-4 font-bold rounded-2xl ${darkMode ? 'text-orange-400 bg-orange-500/10' : 'text-orange-500 bg-orange-50'}`}>
+                    Ovo je vaš uređaj
+                  </div>
+                )}
+                {selectedDevice.status === 'sold' && (
+                  <div className={`flex-1 text-center py-4 font-bold rounded-2xl ${darkMode ? 'text-slate-400 bg-slate-500/10' : 'text-slate-500 bg-slate-50'}`}>
+                    Uređaj je već prodat
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {deleteId && (

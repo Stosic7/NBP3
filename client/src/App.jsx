@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Plus, Search, Filter, BarChart3, User as UserIcon, Settings, Sun, Moon, Award, DollarSign, Clock } from 'lucide-react';
+import { Home, Plus, Search, BarChart3, User as UserIcon, Settings, Sun, Moon, Award, DollarSign, Clock } from 'lucide-react';
 import Auth from './components/Auth';
 import ProfitMatrix from './components/ProfitMatrix';
 import InventoryAging from './components/InventoryAging';
@@ -32,6 +32,22 @@ function App() {
     }
   }, [user]);
 
+  const fetchUser = async (currentToken) => {
+    if (!currentToken) return;
+    try {
+      const res = await fetch('http://localhost:5001/api/auth/me', {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data);
+        localStorage.setItem('userInfo', JSON.stringify(data));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const fetchDevices = async () => {
     try {
       const res = await fetch('http://localhost:5001/api/devices', {
@@ -41,6 +57,7 @@ function App() {
       });
       const data = await res.json();
       setDevices(data);
+      fetchUser(user.token);
     } catch (err) {
       console.error(err);
     } finally {
@@ -84,9 +101,9 @@ function App() {
       case 'inventory':
         return <InventoryList devices={devices} fetchDevices={fetchDevices} darkMode={darkMode} user={user} />;
       case 'add':
-        return <AddDevice fetchDevices={fetchDevices} darkMode={darkMode} />;
+        return <AddDevice fetchDevices={fetchDevices} darkMode={darkMode} user={user} />;
       case 'leaderboard':
-        return <Leaderboard darkMode={darkMode} />;
+        return <Leaderboard darkMode={darkMode} user={user} />;
       case 'profit':
         return <ProfitMatrix darkMode={darkMode} user={user} />;
       case 'aging':

@@ -68,7 +68,6 @@ const AddDevice = ({ fetchDevices, user }) => {
 
   return (
     <>
-      {/* Success Popup */}
       <AnimatePresence>
         {showSuccess && (
           <motion.div

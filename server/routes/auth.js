@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 const generateToken = (id) => {
@@ -22,6 +23,9 @@ router.post('/register', async (req, res) => {
         name: user.name,
         email: user.email,
         avatar: user.avatar,
+        points: user.points,
+        level: user.level,
+        devicesCount: user.devicesCount,
         token: generateToken(user._id)
       });
     } else {
@@ -43,11 +47,32 @@ router.post('/login', async (req, res) => {
         name: user.name,
         email: user.email,
         avatar: user.avatar,
+        points: user.points,
+        level: user.level,
+        devicesCount: user.devicesCount,
         token: generateToken(user._id)
       });
     } else {
       res.status(401).json({ message: 'Pogrešan email ili lozinka' });
     }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get('/me', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      points: user.points,
+      level: user.level,
+      devicesCount: user.devicesCount,
+      token: req.headers.authorization.split(' ')[1]
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

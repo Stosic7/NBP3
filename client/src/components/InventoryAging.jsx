@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, AlertTriangle } from 'lucide-react';
+import { Clock, AlertTriangle, PackageSearch, Loader2 } from 'lucide-react';
 
 const InventoryAging = ({ darkMode, user }) => {
   const [agingData, setAgingData] = useState([]);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAging = async () => {
@@ -19,6 +20,8 @@ const InventoryAging = ({ darkMode, user }) => {
         setAgingData(data);
       } catch (err) {
         setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
     fetchAging();
@@ -34,7 +37,7 @@ const InventoryAging = ({ darkMode, user }) => {
             <Clock className="w-8 h-8 text-orange-500" /> Analiza Zaliha
           </h2>
           <p className={darkMode ? 'text-slate-400' : 'text-gray-500'}>
-            Prikaz uređaja koji najduže čekaju na prodaju (MongoDB $dateDiff kalkulacija u realnom vremenu).
+            Prikaz uređaja koji najduže čekaju na prodaju.
           </p>
         </div>
       </div>
@@ -50,37 +53,57 @@ const InventoryAging = ({ darkMode, user }) => {
             </tr>
           </thead>
           <tbody className={`divide-y ${darkMode ? 'divide-slate-700 bg-slate-800/50' : 'divide-gray-100 bg-white'}`}>
-            {agingData.map((item, index) => (
-              <motion.tr 
-                key={item._id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-gray-50'}`}
-              >
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className={`text-sm font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {item.manufacturer} {item.model}
+            {loading ? (
+              <tr>
+                <td colSpan="4" className={`px-6 py-16 text-center ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                  <div className="flex flex-col items-center justify-center gap-4">
+                    <Loader2 className="w-12 h-12 animate-spin text-orange-500" />
+                    <p className="text-lg font-medium">Učitavanje zaliha...</p>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className={`text-sm ${darkMode ? 'text-slate-300' : 'text-gray-500'}`}>
-                    {new Date(item.receiveDate).toLocaleDateString()}
+              </tr>
+            ) : agingData.length === 0 ? (
+              <tr>
+                <td colSpan="4" className={`px-6 py-16 text-center ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                  <div className="flex flex-col items-center justify-center gap-4">
+                    <PackageSearch className="w-16 h-16 opacity-30" />
+                    <p className="text-lg font-medium">Trenutno nema dostupnih uređaja na stanju.</p>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-red-500">
-                    €{item.buyPrice}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold ${item.daysInStock > 30 ? 'bg-red-500/10 text-red-500' : 'bg-orange-500/10 text-orange-500'}`}>
-                    {item.daysInStock > 30 && <AlertTriangle className="w-4 h-4" />}
-                    {item.daysInStock} dana
-                  </div>
-                </td>
-              </motion.tr>
-            ))}
+              </tr>
+            ) : (
+              agingData.map((item, index) => (
+                <motion.tr 
+                  key={item._id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={`transition-colors ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-gray-50'}`}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className={`text-sm font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {item.manufacturer} {item.model}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className={`text-sm ${darkMode ? 'text-slate-300' : 'text-gray-500'}`}>
+                      {new Date(item.receiveDate).toLocaleDateString()}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-red-500">
+                      €{item.buyPrice}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold ${item.daysInStock > 30 ? 'bg-red-500/10 text-red-500' : 'bg-orange-500/10 text-orange-500'}`}>
+                      {item.daysInStock > 30 && <AlertTriangle className="w-4 h-4" />}
+                      {item.daysInStock} dana
+                    </div>
+                  </td>
+                </motion.tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
