@@ -1,8 +1,9 @@
 const express = require('express');
 const Device = require('../models/Device');
+const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
 
-router.get('/monthly-profit', async (req, res) => {
+router.get('/monthly-profit', protect, async (req, res) => {
   try {
     const stats = await Device.aggregate([
       { $match: { status: 'sold' } },
@@ -22,7 +23,7 @@ router.get('/monthly-profit', async (req, res) => {
   }
 });
 
-router.get('/top-customers', async (req, res) => {
+router.get('/top-customers', protect, async (req, res) => {
   try {
     const topCustomers = await Device.aggregate([
       { $match: { status: 'sold', "customer.email": { $exists: true, $ne: null } } },

@@ -1,9 +1,10 @@
 const express = require('express');
 const Device = require('../models/Device');
 const User = require('../models/User');
+const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+router.get('/', protect, async (req, res) => {
   try {
     const devices = await Device.find().sort({ receiveDate: -1 }).lean();
     res.json(devices);
@@ -12,16 +13,15 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', protect, async (req, res) => {
   try {
-    const device = new Device(req.body);
+    const deviceData = { ...req.body, user: req.user._id };
+    const device = new Device(deviceData);
     const newDevice = await device.save();
     
-    if (req.body.userId) {
-      await User.findByIdAndUpdate(req.body.userId, {
-        $inc: { points: 50, devicesCount: 1 }
-      });
-    }
+    await User.findByIdAndUpdate(req.user._id, {
+      $inc: { points: 50, devicesCount: 1 }
+    });
     
     res.status(201).json(newDevice);
   } catch (err) {
@@ -29,10 +29,15 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', protect, async (req, res) => {
   try {
     const device = await Device.findById(req.params.id);
     if (!device) return res.status(404).json({ message: 'Device not found' });
+    
+    if (device.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Nemate pravo da obrišete ovaj uređaj' });
+    }
+
     await device.deleteOne();
     res.json({ message: 'Device deleted successfully' });
   } catch (err) {
@@ -40,10 +45,16 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', protect, async (req, res) => {
   try {
-    const device = await Device.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    let device = await Device.findById(req.params.id);
     if (!device) return res.status(404).json({ message: 'Device not found' });
+
+    if (device.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Nemate pravo da menjate ovaj uređaj' });
+    }
+
+    device = await Device.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(device);
   } catch (err) {
     res.status(400).json({ message: err.message });

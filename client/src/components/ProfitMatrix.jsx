@@ -2,14 +2,18 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, DollarSign, Package } from 'lucide-react';
 
-const ProfitMatrix = ({ darkMode }) => {
+const ProfitMatrix = ({ darkMode, user }) => {
   const [matrixData, setMatrixData] = useState([]);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchMatrix = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/advanced-analytics/profit-matrix');
+        const response = await fetch('http://localhost:5001/api/advanced-analytics/profit-matrix', {
+          headers: {
+            Authorization: `Bearer ${user.token}`
+          }
+        });
         if (!response.ok) throw new Error('Network error');
         const data = await response.json();
         setMatrixData(data);
@@ -18,7 +22,7 @@ const ProfitMatrix = ({ darkMode }) => {
       }
     };
     fetchMatrix();
-  }, []);
+  }, [user]);
 
   const getBucketLabel = (id) => {
     if (id === 0) return 'Niska marža (0 - 50€)';

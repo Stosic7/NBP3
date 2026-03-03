@@ -4,13 +4,15 @@ import { LogOut, Mail, Shield, Zap, Package, Award, TrendingUp, ChevronRight } f
 const Profile = ({ darkMode, user, onLogout }) => {
   if (!user) return null;
 
-  const experienceToNextLevel = (user.level * 1000);
-  const progress = (user.points / experienceToNextLevel) * 100;
+  const safePoints = user.points || 0;
+  const safeLevel = user.level || 1;
+  const experienceToNextLevel = safeLevel * 1000;
+  const progress = (safePoints / experienceToNextLevel) * 100 || 0;
 
   const stats = [
-    { label: 'Ukupno Bodova', value: user.points || 0, icon: Zap, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
+    { label: 'Ukupno Bodova', value: safePoints, icon: Zap, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
     { label: 'Dodati Uređaji', value: user.devicesCount || 0, icon: Package, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { label: 'Trenutni Rank', value: user.points > 500 ? 'Expert' : 'Novice', icon: Award, color: 'text-purple-500', bg: 'bg-purple-500/10' }
+    { label: 'Trenutni Rank', value: safePoints > 500 ? 'Expert' : 'Novice', icon: Award, color: 'text-purple-500', bg: 'bg-purple-500/10' }
   ];
 
   return (
@@ -30,7 +32,7 @@ const Profile = ({ darkMode, user, onLogout }) => {
                 className={`w-40 h-40 rounded-3xl border-8 object-cover shadow-2xl ${darkMode ? 'border-slate-800' : 'border-white'} bg-slate-200`} 
               />
               <div className="absolute -bottom-4 -right-4 bg-yellow-400 text-slate-900 font-black px-4 py-2 rounded-2xl shadow-lg border-4 border-inherit">
-                LVL {Math.floor(user.points / 1000) + 1}
+                LVL {Math.floor(safePoints / 1000) + 1}
               </div>
             </motion.div>
             <div className="mb-4">
@@ -42,7 +44,7 @@ const Profile = ({ darkMode, user, onLogout }) => {
                   <Shield className="w-4 h-4" /> Administrator
                 </span>
                 <span className="flex items-center gap-1 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-sm">
-                  <TrendingUp className="w-4 h-4" /> {user.points > 500 ? 'Top 5%' : 'Novi Član'}
+                  <TrendingUp className="w-4 h-4" /> {safePoints > 500 ? 'Top 5%' : 'Novi Član'}
                 </span>
               </div>
             </div>
@@ -82,7 +84,7 @@ const Profile = ({ darkMode, user, onLogout }) => {
               />
             </div>
             <p className={`mt-4 text-sm font-medium ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-              Još {experienceToNextLevel - (user.points || 0)} bodova do Levela {Math.floor(user.points / 1000) + 2}!
+              Još {experienceToNextLevel - safePoints} bodova do Levela {Math.floor(safePoints / 1000) + 2}!
             </p>
           </div>
 

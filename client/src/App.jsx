@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Plus, Search, Filter, BarChart3, User, Settings, Sun, Moon, Award, DollarSign, Clock } from 'lucide-react';
+import { Home, Plus, Search, Filter, BarChart3, User as UserIcon, Settings, Sun, Moon, Award, DollarSign, Clock } from 'lucide-react';
 import Auth from './components/Auth';
 import ProfitMatrix from './components/ProfitMatrix';
 import InventoryAging from './components/InventoryAging';
@@ -34,7 +34,11 @@ function App() {
 
   const fetchDevices = async () => {
     try {
-      const res = await fetch('http://localhost:5001/api/devices');
+      const res = await fetch('http://localhost:5001/api/devices', {
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
+      });
       const data = await res.json();
       setDevices(data);
     } catch (err) {
@@ -61,7 +65,7 @@ function App() {
     { id: 'leaderboard', icon: Award, label: 'Leaderboard' },
     { id: 'profit', icon: DollarSign, label: 'Profit Matrix' },
     { id: 'aging', icon: Clock, label: 'Stock Aging' },
-    { id: 'profile', icon: User, label: 'Profile' },
+    { id: 'profile', icon: UserIcon, label: 'Profile' },
     { id: 'settings', icon: Settings, label: 'Settings' }
   ];
 
@@ -78,15 +82,15 @@ function App() {
       case 'stats':
         return <AdvancedStats devices={devices} darkMode={darkMode} />;
       case 'inventory':
-        return <InventoryList devices={devices} fetchDevices={fetchDevices} darkMode={darkMode} />;
+        return <InventoryList devices={devices} fetchDevices={fetchDevices} darkMode={darkMode} user={user} />;
       case 'add':
         return <AddDevice fetchDevices={fetchDevices} darkMode={darkMode} />;
       case 'leaderboard':
         return <Leaderboard darkMode={darkMode} />;
       case 'profit':
-        return <ProfitMatrix darkMode={darkMode} />;
+        return <ProfitMatrix darkMode={darkMode} user={user} />;
       case 'aging':
-        return <InventoryAging darkMode={darkMode} />;
+        return <InventoryAging darkMode={darkMode} user={user} />;
       case 'profile':
         return <Profile darkMode={darkMode} user={user} onLogout={handleLogout} />;
       case 'settings':
@@ -172,7 +176,7 @@ function App() {
             className={`lg:w-96 ${darkMode ? 'bg-slate-800/90' : 'bg-white/95'} rounded-3xl shadow-2xl border border-white/50 p-10 sticky top-12 h-fit hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-700`}
           >
             <nav className="space-y-4">
-              {tabs.map((tab, index) => (
+              {tabs.map((tab) => (
                 <motion.button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}

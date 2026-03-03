@@ -2,14 +2,18 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, AlertTriangle } from 'lucide-react';
 
-const InventoryAging = ({ darkMode }) => {
+const InventoryAging = ({ darkMode, user }) => {
   const [agingData, setAgingData] = useState([]);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchAging = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/advanced-analytics/inventory-aging');
+        const response = await fetch('http://localhost:5001/api/advanced-analytics/inventory-aging', {
+          headers: {
+            Authorization: `Bearer ${user.token}`
+          }
+        });
         if (!response.ok) throw new Error('Network error');
         const data = await response.json();
         setAgingData(data);
@@ -18,7 +22,7 @@ const InventoryAging = ({ darkMode }) => {
       }
     };
     fetchAging();
-  }, []);
+  }, [user]);
 
   if (error) return <div className="text-red-500 font-bold p-6">Greška: {error}</div>;
 
