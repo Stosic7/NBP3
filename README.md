@@ -23,7 +23,7 @@ npm -v
 Korak 1: Kloniranje i pozicioniranje
 ```bash
 git clone https://github.com/Stosic7/NBP3.git
-cd techstock
+cd NBP3
 ```
 
 Korak 2: Backend setup (server folder)
