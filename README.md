@@ -48,7 +48,8 @@ npm start      # Production
 Korak 4 - FrontEnd Setup - client folder
 
 ```bash
-cd ../client
+cd ..
+cd client
 npm install
 npm start
 ```
