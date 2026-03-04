@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Plus, Search, BarChart3, User as UserIcon, Settings, Sun, Moon, Award, DollarSign, Clock } from 'lucide-react';
+import { Home, Plus, Search, Filter, BarChart3, User as UserIcon, Settings, Sun, Moon, Award, DollarSign, Clock } from 'lucide-react';
 import Auth from './components/Auth';
 import ProfitMatrix from './components/ProfitMatrix';
 import InventoryAging from './components/InventoryAging';
@@ -26,13 +26,7 @@ function App() {
     }
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      fetchDevices();
-    }
-  }, [user]);
-
-  const fetchUser = async (currentToken) => {
+  const fetchUser = useCallback(async (currentToken) => {
     if (!currentToken) return;
     try {
       const res = await fetch('http://localhost:5001/api/auth/me', {
@@ -46,24 +40,32 @@ function App() {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
 
-  const fetchDevices = async () => {
+  const fetchDevices = useCallback(async () => {
+    if (!user) return;
     try {
       const res = await fetch('http://localhost:5001/api/devices', {
-        headers: {
-          Authorization: `Bearer ${user.token}`
-        }
+        headers: { Authorization: `Bearer ${user.token}` }
       });
       const data = await res.json();
       setDevices(data);
-      fetchUser(user.token);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user && user.token) {
+      setLoading(true);
+      Promise.all([
+        fetchDevices(),
+        fetchUser(user.token)
+      ]);
+    }
+  }, [user?.token, fetchDevices, fetchUser]);
 
   const handleLogin = (userData) => {
     setUser(userData);
@@ -99,17 +101,17 @@ function App() {
       case 'stats':
         return <AdvancedStats devices={devices} darkMode={darkMode} />;
       case 'inventory':
-        return <InventoryList devices={devices} fetchDevices={fetchDevices} darkMode={darkMode} user={user} />;
+        return <InventoryList devices={devices} fetchDevices={fetchDevices} darkMode={darkMode} user={user} loading={loading} />;
       case 'add':
         return <AddDevice fetchDevices={fetchDevices} darkMode={darkMode} user={user} />;
       case 'leaderboard':
-        return <Leaderboard darkMode={darkMode} user={user} />;
+        return <Leaderboard darkMode={darkMode} devices={devices} />;
       case 'profit':
-        return <ProfitMatrix darkMode={darkMode} user={user} />;
+        return <ProfitMatrix darkMode={darkMode} devices={devices} />;
       case 'aging':
-        return <InventoryAging darkMode={darkMode} user={user} />;
+        return <InventoryAging darkMode={darkMode} devices={devices} />;
       case 'profile':
-        return <Profile darkMode={darkMode} user={user} onLogout={handleLogout} />;
+        return <Profile darkMode={darkMode} user={user} onLogout={handleLogout} setUser={setUser} />;
       case 'settings':
         return (
           <motion.div className="glass-card p-16 rounded-3xl max-w-2xl mx-auto text-center">

@@ -1,33 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, AlertTriangle, PackageSearch, Loader2 } from 'lucide-react';
+import { Clock, AlertTriangle, PackageSearch } from 'lucide-react';
 
-const InventoryAging = ({ darkMode, user }) => {
-  const [agingData, setAgingData] = useState([]);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchAging = async () => {
-      try {
-        const response = await fetch('http://localhost:5001/api/advanced-analytics/inventory-aging', {
-          headers: {
-            Authorization: `Bearer ${user.token}`
-          }
-        });
-        if (!response.ok) throw new Error('Network error');
-        const data = await response.json();
-        setAgingData(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAging();
-  }, [user]);
-
-  if (error) return <div className="text-red-500 font-bold p-6">Greška: {error}</div>;
+const InventoryAging = ({ darkMode, devices }) => {
+  const agingData = useMemo(() => {
+    if (!devices) return [];
+    
+    return devices
+      .filter(d => d.status !== 'sold' && d.status !== 'reserved')
+      .map(d => {
+        const rDate = d.receiveDate ? new Date(d.receiveDate) : new Date();
+        const diffTime = Math.abs(new Date() - rDate);
+        const daysInStock = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        return { ...d, daysInStock };
+      })
+      .sort((a, b) => b.daysInStock - a.daysInStock)
+      .slice(0, 15);
+  }, [devices]);
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -53,16 +43,7 @@ const InventoryAging = ({ darkMode, user }) => {
             </tr>
           </thead>
           <tbody className={`divide-y ${darkMode ? 'divide-slate-700 bg-slate-800/50' : 'divide-gray-100 bg-white'}`}>
-            {loading ? (
-              <tr>
-                <td colSpan="4" className={`px-6 py-16 text-center ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                  <div className="flex flex-col items-center justify-center gap-4">
-                    <Loader2 className="w-12 h-12 animate-spin text-orange-500" />
-                    <p className="text-lg font-medium">Učitavanje zaliha...</p>
-                  </div>
-                </td>
-              </tr>
-            ) : agingData.length === 0 ? (
+            {agingData.length === 0 ? (
               <tr>
                 <td colSpan="4" className={`px-6 py-16 text-center ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
                   <div className="flex flex-col items-center justify-center gap-4">

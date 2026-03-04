@@ -78,4 +78,34 @@ router.get('/me', protect, async (req, res) => {
   }
 });
 
+router.put('/profile', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    
+    if (user) {
+      user.name = req.body.name || user.name;
+      if (req.body.avatar) {
+        user.avatar = req.body.avatar;
+      }
+      
+      const updatedUser = await user.save();
+      
+      res.json({
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        avatar: updatedUser.avatar,
+        points: updatedUser.points,
+        level: updatedUser.level,
+        devicesCount: updatedUser.devicesCount,
+        token: req.headers.authorization.split(' ')[1] 
+      });
+    } else {
+      res.status(404).json({ message: 'Korisnik nije pronađen' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

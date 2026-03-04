@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Medal, Star, TrendingUp, ShoppingBag } from "lucide-react";
 
@@ -59,37 +59,31 @@ const avatarColors = [
   "from-indigo-500 to-blue-600",
 ];
 
-const Leaderboard = ({ darkMode, user }) => {
-  const [customers, setCustomers] = useState([]);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchTopCustomers = async () => {
-      try {
-        const response = await fetch(
-          "http://localhost:5001/api/analytics/top-customers",
-          {
-            headers: {
-              Authorization: `Bearer ${user.token}`,
-            },
-          },
-        );
-        if (!response.ok) throw new Error("Network response was not ok");
-        const data = await response.json();
-        setCustomers(data);
-      } catch (err) {
-        setError(err.message);
+const Leaderboard = ({ darkMode, devices }) => {
+  const customers = useMemo(() => {
+    if (!devices) return [];
+    const customersMap = {};
+    
+    devices.forEach(d => {
+      if (d.status === 'sold' && d.customer && d.customer.email) {
+        const email = d.customer.email;
+        if (!customersMap[email]) {
+          customersMap[email] = {
+            _id: email,
+            name: d.customer.name,
+            totalSpent: 0,
+            devicesBought: 0
+          };
+        }
+        customersMap[email].totalSpent += d.sellPrice;
+        customersMap[email].devicesBought += 1;
       }
-    };
-    fetchTopCustomers();
-  }, [user]);
+    });
 
-  if (error)
-    return (
-      <div className="glass-card rounded-3xl p-8 text-center">
-        <p className="text-red-400 font-medium">⚠️ Greška: {error}</p>
-      </div>
-    );
+    return Object.values(customersMap)
+      .sort((a, b) => b.totalSpent - a.totalSpent)
+      .slice(0, 10);
+  }, [devices]);
 
   const top3 = customers.slice(0, 3);
   const rest = customers.slice(3);
@@ -202,7 +196,7 @@ const Leaderboard = ({ darkMode, user }) => {
                       key={customer._id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.3 + i * 0.07, duration: 0.4 }}
+                      transition={{ delay: 0.1 + i * 0.05, duration: 0.4 }}
                       className="group relative rounded-2xl px-5 py-4 border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-200"
                     >
                       <div className="flex items-center gap-4">
@@ -229,7 +223,7 @@ const Leaderboard = ({ darkMode, user }) => {
                               initial={{ width: 0 }}
                               animate={{ width: `${barWidth}%` }}
                               transition={{
-                                delay: 0.4 + i * 0.07,
+                                delay: 0.2 + i * 0.05,
                                 duration: 0.6,
                                 ease: "easeOut",
                               }}
