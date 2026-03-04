@@ -22,7 +22,7 @@ npm -v
 
 Korak 1: Kloniranje i pozicioniranje
 ```bash
-git clone <tvoj-repo-url>
+git clone https://github.com/Stosic7/NBP3.git
 cd techstock
 ```
 
