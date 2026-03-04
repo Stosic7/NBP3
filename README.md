@@ -1,6 +1,6 @@
 # Napredne Baze Podataka - Uputstvo za pokretanje projekta "TechStock"
 
-Ovaj dokument predstavlja kompletno, korak-po-korak uputstvo za konfiguraciju, pokretanje i inicijalizaciju projekta **"TechStock"**. Web aplikacija omogućava kompanijama koje prodaju polovnu/refurbished IT opremu (laptopovi, telefoni, komponente) da upravljaju zalihama, evidenciraju prodaju, filtriraju po statusu/tipu i prate profit kroz interaktivni dashboard.
+Ovaj dokument predstavlja kompletno, korak-po-korak uputstvo za konfiguraciju, pokretanje i inicijalizaciju projekta **"TechStock"**. Web aplikacija omogućava kompanijama koje prodaju polovnu/refurbished IT opremu (laptopovi, telefoni, komponente) da upravljaju zalihama, evidentiraju prodaju, filtriraju po statusu/tipu i prate profit kroz interaktivni dashboard.
 
 Sistem koristi **MongoDB Atlas** kao NoSQL bazu podataka, **Node.js/Express** backend i **React** frontend.
 
