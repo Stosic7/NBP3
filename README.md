@@ -27,29 +27,31 @@ cd techstock
 ```
 
 Korak 2: Backend setup (server folder)
-
+```bash
 cd server
 npm install
+```
 
 Korak 3: Kreirajte .env fajl u server folderu:
-
+```bash
 MONGODB_URI=mongodb+srv://thetwix7_db_user:ZBBll62OUGzJVT8y@nb3.jmi9hr4.mongodb.net/nbp3?retryWrites=true&w=majority&appName=NB3
 PORT=5001
 NODE_ENV=development
+```
 
 Pokretanje backend-a:
-
+```bash
 npm run dev    # Development sa nodemon (hot reload)
-# ili
 npm start      # Production
-
-
+```
 
 Korak 4 - FrontEnd Setup - client folder
 
+```bash
 cd ../client
 npm install
 npm start
+```
 
 
 Frontend: http://localhost:3000
