@@ -42,6 +42,15 @@ EOF
 
 ```
 
+Ukoliko niste u mogućnosti da izvršite komandu iznad, možete to uraditi i ručno.  
+U `server` folderu kreirajte novi fajl pod nazivom `.env`.  
+U taj fajl prekopirajte sledeće:
+```bash
+MONGODB_URI=mongodb+srv://thetwix7_db_user:ZBBll62OUGzJVT8y@nb3.jmi9hr4.mongodb.net/nbp3?retryWrites=true&w=majority&appName=NB3
+PORT=5001
+NODE_ENV=development
+```
+
 Pokretanje backend-a:
 ```bash
 npm run dev    # Development sa nodemon (hot reload)
